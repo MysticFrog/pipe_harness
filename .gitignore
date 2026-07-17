@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# FreeCAD working/backup files
+*.FCStd1
+*.FCBak
+*.FCStd.lock
+*.brep_dump
+
+# Local Claude / tooling session data
+.claude/
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and temp output
+*.log
+*.tmp
