@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Headless verification, run via the portable FreeCAD's FreeCADCmd.exe:
 
     FreeCADCmd.exe test_snapping.py

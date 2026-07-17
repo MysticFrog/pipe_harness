@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Extra 3D view interactions, active only while the Pipe Harness workbench is
 the current one (see InitGui.py's Activated/Deactivated, which call
 enable()/disable()): a "grab and move" translation of the selected App::Part

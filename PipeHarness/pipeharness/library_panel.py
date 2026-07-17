@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Dockable "Pipe Harness Parts Library" panel: a folder tree of saved
 components (see library.py), with Add/Remove Folder buttons and an Insert
 action to copy a library part into the currently active document.

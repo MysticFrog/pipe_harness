@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Headless verification of the Hose object, run via FreeCADCmd.exe:
 
     FreeCADCmd.exe test_hose.py

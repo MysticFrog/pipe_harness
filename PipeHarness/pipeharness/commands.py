@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Toolbar/menu commands for the Pipe Harness workbench.
 
 Each Command class follows FreeCAD's standard pattern (GetResources / Activated /
@@ -10,7 +11,7 @@ import FreeCAD as App
 import FreeCADGui as Gui
 import Import
 
-from .qtcompat import QtGui
+from .qtcompat import QtGui, QtCore
 from .dialogs import StraightSegmentDialog, BendSegmentDialog
 from . import objects
 from . import snapping
@@ -19,6 +20,9 @@ from . import library
 from . import library_panel
 
 _ICON_DIR = os.path.join(os.path.dirname(__file__), "..", "Resources", "icons")
+
+QT_TRANSLATE_NOOP = QtCore.QT_TRANSLATE_NOOP  # mark UI strings for translation (no-op at runtime)
+
 
 
 def _icon(name):
@@ -105,7 +109,7 @@ class ImportSTEPCommand:
     def GetResources(self):
         return {
             "Pixmap": _icon("ImportSTEP.svg"),
-            "MenuText": "Import STEP as Component",
+            "MenuText": QT_TRANSLATE_NOOP("PipeHarness", "Import STEP as Component"),
             "ToolTip": "Import a STEP file and wrap it as a new component (App::Part)",
         }
 
@@ -139,7 +143,7 @@ class AddConnectionPointCommand:
     def GetResources(self):
         return {
             "Pixmap": _icon("AddConnectionPoint.svg"),
-            "MenuText": "Add Connection Point",
+            "MenuText": QT_TRANSLATE_NOOP("PipeHarness", "Add Connection Point"),
             "ToolTip": "Select a face on a component (optionally Ctrl+click a vertex or "
                        "circular edge too, for an exact center), then add a hydraulic "
                        "connection point there",
@@ -201,7 +205,7 @@ class ConnectPointsCommand:
     def GetResources(self):
         return {
             "Pixmap": _icon("ConnectPoints.svg"),
-            "MenuText": "Connect Points",
+            "MenuText": QT_TRANSLATE_NOOP("PipeHarness", "Connect Points"),
             "ToolTip": "Select a fixed connection point, then a free connection point (in "
                        "that order), and snap the free component into place",
         }
@@ -274,7 +278,7 @@ class BreakJointCommand:
     def GetResources(self):
         return {
             "Pixmap": _icon("BreakJoint.svg"),
-            "MenuText": "Break Joint",
+            "MenuText": QT_TRANSLATE_NOOP("PipeHarness", "Break Joint"),
             "ToolTip": "Select a Joint (the small ball-and-link marker between two mated "
                        "points, in the 3D view or the tree) and remove it - the components "
                        "stay where they are, just no longer tracked as mated",
@@ -302,7 +306,7 @@ class ToggleConnectionPointsCommand:
     def GetResources(self):
         return {
             "Pixmap": _icon("ToggleConnectionPoints.svg"),
-            "MenuText": "Hide/Show Connection Points",
+            "MenuText": QT_TRANSLATE_NOOP("PipeHarness", "Hide/Show Connection Points"),
             "ToolTip": "Toggle visibility of every connection point in the active document",
         }
 
@@ -347,7 +351,7 @@ class AddHoseCommand:
     def GetResources(self):
         return {
             "Pixmap": _icon("AddHose.svg"),
-            "MenuText": "Add Hose",
+            "MenuText": QT_TRANSLATE_NOOP("PipeHarness", "Add Hose"),
             "ToolTip": "Select one connection point to start a hose from (or select "
                        "nothing to start one at the world origin) - a first straight "
                        "segment is added automatically; use Add Straight/Bend Segment "
@@ -376,7 +380,7 @@ class AddStraightSegmentCommand:
     def GetResources(self):
         return {
             "Pixmap": _icon("AddStraightSegment.svg"),
-            "MenuText": "Add Straight Segment",
+            "MenuText": QT_TRANSLATE_NOOP("PipeHarness", "Add Straight Segment"),
             "ToolTip": "Select a Hose to extend it (or a connection point to start a new "
                        "one there, or nothing to start one at the world origin), then fill "
                        "in the straight length for the new segment - appended to the open "
@@ -408,7 +412,7 @@ class AddBendSegmentCommand:
     def GetResources(self):
         return {
             "Pixmap": _icon("AddBendSegment.svg"),
-            "MenuText": "Add Bend Segment",
+            "MenuText": QT_TRANSLATE_NOOP("PipeHarness", "Add Bend Segment"),
             "ToolTip": "Select a Hose to extend it (or a connection point to start a new "
                        "one there, or nothing to start one at the world origin), then fill "
                        "in the bend radius, swept angle, and yaw for the new bend - appended "
@@ -436,7 +440,7 @@ class ExportToLibraryCommand:
     def GetResources(self):
         return {
             "Pixmap": _icon("ExportToLibrary.svg"),
-            "MenuText": "Export to Parts Library",
+            "MenuText": QT_TRANSLATE_NOOP("PipeHarness", "Export to Parts Library"),
             "ToolTip": "Save the selected component (with its connection points) into "
                        "the local parts library",
         }
@@ -476,7 +480,7 @@ class ToggleLibraryPanelCommand:
     def GetResources(self):
         return {
             "Pixmap": _icon("PartsLibrary.svg"),
-            "MenuText": "Show/Hide Parts Library",
+            "MenuText": QT_TRANSLATE_NOOP("PipeHarness", "Show/Hide Parts Library"),
             "ToolTip": "Show or hide the Pipe Harness Parts Library panel",
         }
 
@@ -493,7 +497,7 @@ class ToggleLibraryPanelCommand:
 class ToggleGroundedCommand:
     def GetResources(self):
         return {
-            "MenuText": "Toggle Grounded",
+            "MenuText": QT_TRANSLATE_NOOP("PipeHarness", "Toggle Grounded"),
             "ToolTip": "Ground/unground the selected component(s). A grounded component is "
                        "a fixed reference: Connect Points snaps other parts onto it without "
                        "moving it, and it isn't dragged when a jointed neighbour moves.",

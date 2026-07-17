@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Propagates a moved component's (or free-floating hose's) Placement change
 through any Joint connecting it to other components/hoses, so a whole jointed
 assembly moves together instead of only the one piece you directly moved or

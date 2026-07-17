@@ -52,6 +52,13 @@ view are planned for later phases.
       right-click context menu (Insert / Move to Folder / Delete for parts,
       Add Subfolder / Remove Folder for folders), and the folder-selecting
       Export dialog.
+  - `Resources/translations/PipeHarness.ts` — Qt Linguist source (English)
+    translation template. User-facing strings (command labels, dialog titles/
+    fields) are wrapped for translation under the `PipeHarness` context;
+    `InitGui.py` registers this folder via `Gui.addLanguagePath()`. To add a
+    language, copy it to `PipeHarness_<lang>.ts`, translate, and compile to
+    `.qm` with `lrelease`. Every source file also carries a one-line
+    `SPDX-License-Identifier: MIT` header.
   - `data/fitting_standards.json` — the JIC/BSP/ORFS fitting standards and
     sizes. Add new standards/sizes here, no code changes needed.
   - `data/dash_sizes.json` — approximate hydraulic hose OD by SAE dash size

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Headless logic check of the grab-move-drop component mover, run via
 FreeCADCmd.exe:
 

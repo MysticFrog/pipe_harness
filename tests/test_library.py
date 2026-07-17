@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Headless verification of the parts-library backend, run via FreeCADCmd.exe:
 
     FreeCADCmd.exe test_library.py

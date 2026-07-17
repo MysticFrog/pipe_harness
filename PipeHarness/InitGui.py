@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 import FreeCAD as App
 import FreeCADGui as Gui
 
@@ -38,8 +39,18 @@ class PipeHarnessWorkbench(Gui.Workbench):
         # they are added in Activated() and removed in Deactivated(), so this
         # addon does nothing to other documents/workbenches while it isn't the
         # active one (no global, always-on side effects).
+        import os
+        import pipeharness
         from pipeharness import commands  # noqa: F401 - registers Gui.addCommand calls
         from pipeharness.library_panel import get_or_create_panel
+        # Register the translations folder so FreeCAD loads any compiled .qm for
+        # the current locale (see Resources/translations/PipeHarness.ts).
+        translations = os.path.join(
+            os.path.dirname(pipeharness.__file__), "..", "Resources", "translations"
+        )
+        if os.path.isdir(translations):
+            Gui.addLanguagePath(translations)
+            Gui.updateLocale()
         self.appendToolbar("Pipe Harness", self.command_list)
         self.appendMenu("Pipe Harness", self.command_list)
         get_or_create_panel()

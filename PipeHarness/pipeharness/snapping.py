@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Placement math for the point-and-click magnet/snap join.
 
 Given a fixed ConnectionPoint and a free ConnectionPoint, computes the new

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Small compatibility shim so the rest of the package can just
 ``from .qtcompat import QtGui`` regardless of FreeCAD version: 1.0+ uses
 PySide6 (QFileDialog, QDialog, etc. live in QtWidgets), 0.2x uses FreeCAD's

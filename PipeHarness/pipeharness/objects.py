@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Custom document objects for the Pipe Harness workbench.
 
 ConnectionPoint - a hydraulic port marker (Part::FeaturePython) placed on an

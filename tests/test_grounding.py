@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Headless verification of component grounding and native-body wrapping, run
 via FreeCADCmd.exe:
 

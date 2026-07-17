@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Loads the data-driven fitting standard/size library from data/fitting_standards.json.
 
 Adding a new standard or size means editing that JSON file, not this module.

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Headless verification of JointPropagationObserver, run via FreeCADCmd.exe:
 
     FreeCADCmd.exe test_joint_propagation.py

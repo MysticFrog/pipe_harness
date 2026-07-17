@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Generates two placeholder STEP files for manually testing the workbench in the
 FreeCAD GUI (Import / AddConnectionPoint / Connect / Break). These are simple
 primitives standing in for real fitting models, not actual hydraulic parts.

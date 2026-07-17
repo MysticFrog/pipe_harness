@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Local parts library: export a component (with its connection points) to a
 reusable .FCStd file under a local library folder, and insert one back into
 the active document.

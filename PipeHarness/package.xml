@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!-- SPDX-License-Identifier: MIT -->
 <package format="1" xmlns="https://wiki.freecad.org/Package_Metadata">
   <name>Pipe Harness</name>
   <description>Build pipe/hose harness assemblies: import STEP components, mark connection points on them (or on native FreeCAD bodies), snap components together by matching up ports, and route flexible hose/pipe runs as chains of straight and bend segments. Includes component grounding, joint propagation, a grab-move-drop mover, and a local parts library.</description>

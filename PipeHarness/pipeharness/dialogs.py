@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Modal dialogs for the "Add Straight Segment" and "Add Bend Segment" commands.
 
 Both create the new segment immediately (with default values) when the dialog
@@ -9,8 +10,16 @@ Kept as two separate, minimal dialogs (rather than one combined form) since a
 straight run and a bend are two different kinds of thing to add, each with its
 own distinct fields.
 """
+import FreeCAD as App
+
 from .qtcompat import QtGui
 from . import objects
+
+
+def _tr(text):
+    """Translate a user-facing string in the 'PipeHarness' context (returns the
+    source text unchanged when no translation is loaded)."""
+    return App.Qt.translate("PipeHarness", text)
 
 
 def _spin(value, minimum, maximum, suffix):
@@ -25,7 +34,7 @@ def _spin(value, minimum, maximum, suffix):
 class StraightSegmentDialog(QtGui.QDialog):
     def __init__(self, hose, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Add Straight Segment")
+        self.setWindowTitle(_tr("Add Straight Segment"))
         self.hose = hose
         self.doc = hose.Document
 
@@ -35,7 +44,7 @@ class StraightSegmentDialog(QtGui.QDialog):
         self.length.valueChanged.connect(self._update_preview)
 
         form = QtGui.QFormLayout()
-        form.addRow("Straight Length", self.length)
+        form.addRow(_tr("Straight Length"), self.length)
 
         buttons = QtGui.QDialogButtonBox(
             QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel
@@ -59,7 +68,7 @@ class StraightSegmentDialog(QtGui.QDialog):
 class BendSegmentDialog(QtGui.QDialog):
     def __init__(self, hose, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Add Bend Segment")
+        self.setWindowTitle(_tr("Add Bend Segment"))
         self.hose = hose
         self.doc = hose.Document
 
@@ -78,9 +87,9 @@ class BendSegmentDialog(QtGui.QDialog):
         self.yaw.valueChanged.connect(self._update_preview)
 
         form = QtGui.QFormLayout()
-        form.addRow("Bend Radius", self.radius)
-        form.addRow("Swept Angle (0 = straight)", self.swept_angle)
-        form.addRow("Yaw (bend axis)", self.yaw)
+        form.addRow(_tr("Bend Radius"), self.radius)
+        form.addRow(_tr("Swept Angle (0 = straight)"), self.swept_angle)
+        form.addRow(_tr("Yaw (bend axis)"), self.yaw)
 
         buttons = QtGui.QDialogButtonBox(
             QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel
