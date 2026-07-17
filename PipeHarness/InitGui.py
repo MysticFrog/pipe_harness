@@ -28,36 +28,47 @@ class PipeHarnessWorkbench(Gui.Workbench):
         wb_dir = os.path.dirname(os.path.dirname(pipeharness.__file__))
         self.Icon = os.path.join(wb_dir, "Resources", "icons", "PipeHarness.svg")
         self.drag_handler = None
+        self._view_observer = None
+        self._joint_observer = None
 
     def Initialize(self):
-        # Runs once, the first time this workbench is activated. The drag-translate
-        # handler and its document observer are created here (once) rather than in
-        # Activated() (which runs every time the workbench is switched to) - the
-        # observer re-attaches the handler to whichever view becomes active, so
-        # switching/creating documents while the workbench stays active still works
-        # (Activated() alone would only attach to the view current at that instant).
+        # Runs once, the first time this workbench is activated: register the
+        # commands and build the toolbar/menu/library panel. The document
+        # observers and 3D-view handlers are deliberately NOT registered here -
+        # they are added in Activated() and removed in Deactivated(), so this
+        # addon does nothing to other documents/workbenches while it isn't the
+        # active one (no global, always-on side effects).
         from pipeharness import commands  # noqa: F401 - registers Gui.addCommand calls
-        from pipeharness.drag_translate import DragTranslateHandler, _ViewActivationObserver
-        from pipeharness.joint_propagation import JointPropagationObserver
         from pipeharness.library_panel import get_or_create_panel
-        self.drag_handler = DragTranslateHandler()
-        App.addDocumentObserver(_ViewActivationObserver(self.drag_handler))
-        # Joint propagation is data consistency, not a 3D-view convenience like
-        # drag-translate/Escape, so it's registered unconditionally here rather
-        # than gated by Activated()/Deactivated() - a jointed assembly should stay
-        # consistent even if the user switches away from this workbench.
-        App.addDocumentObserver(JointPropagationObserver())
         self.appendToolbar("Pipe Harness", self.command_list)
         self.appendMenu("Pipe Harness", self.command_list)
         get_or_create_panel()
 
+    def _ensure_handlers(self):
+        if self.drag_handler is None:
+            from pipeharness.drag_translate import DragTranslateHandler, _ViewActivationObserver
+            from pipeharness.joint_propagation import JointPropagationObserver
+            self.drag_handler = DragTranslateHandler()
+            self._view_observer = _ViewActivationObserver(self.drag_handler)
+            self._joint_observer = JointPropagationObserver()
+
     def Activated(self):
-        if self.drag_handler is not None:
-            self.drag_handler.enable()
+        # Register the observers/handlers only while this workbench is active.
+        self._ensure_handlers()
+        App.addDocumentObserver(self._view_observer)
+        App.addDocumentObserver(self._joint_observer)
+        # We didn't track Placement changes while inactive, so re-seed the
+        # propagation baselines from the current documents before enabling it.
+        self._joint_observer.resync()
+        self.drag_handler.enable()
 
     def Deactivated(self):
         if self.drag_handler is not None:
             self.drag_handler.disable()
+        if self._view_observer is not None:
+            App.removeDocumentObserver(self._view_observer)
+        if self._joint_observer is not None:
+            App.removeDocumentObserver(self._joint_observer)
 
     def ContextMenu(self, recipient):
         # Lets "Export to Parts Library" / "Toggle Grounded" show up on

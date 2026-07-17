@@ -185,6 +185,22 @@ def main():
         "Undo should revert UB's connection point too"
     )
 
+    # resync() (called when the workbench is re-activated) re-seeds baselines
+    # from the current documents, so a move made *after* re-activation computes a
+    # correct delta rather than one measured against a stale pre-move baseline.
+    ua.Placement = App.Placement(ua.Placement.Base + App.Vector(3, 0, 0), ua.Placement.Rotation)
+    undoc.recompute()  # move UA without the freshest baseline in cache
+    observer.resync()
+    assert observer._last_placement.get(ua.Name).Base == ua.Placement.Base, (
+        "resync should record each object's current placement as the new baseline"
+    )
+    ub_now = App.Vector(ub.Placement.Base)
+    ua.Placement = App.Placement(ua.Placement.Base + App.Vector(7, 0, 0), ua.Placement.Rotation)
+    undoc.recompute()
+    assert (App.Vector(ub.Placement.Base) - ub_now - App.Vector(7, 0, 0)).Length < 1e-4, (
+        "after resync, the next move should propagate by exactly the move delta"
+    )
+
     print("ALL CHECKS PASSED")
 
 

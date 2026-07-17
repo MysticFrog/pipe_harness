@@ -13,10 +13,12 @@ points (and anything jointed through them) behind, since a ConnectionPoint's
 own Placement is calibrated once at creation time relative to the *component*
 (App::Part), not the shape inside it. See `_classify()` below.
 
-Registered once (document-level, not tied to workbench activation like
-drag_translate.py - this is about keeping the data consistent, not a 3D view
-interaction convenience) via App.addDocumentObserver in InitGui.py's
-Initialize().
+Registered via App.addDocumentObserver only while the Pipe Harness workbench is
+the active one (added in InitGui.py's Activated(), removed in Deactivated()), so
+it has no effect on other documents/workbenches when Pipe Harness isn't in use.
+Because changes aren't tracked while it's inactive, resync() re-seeds the
+placement baselines from the open documents each time the workbench is
+re-activated.
 """
 import FreeCAD as App
 
@@ -110,6 +112,23 @@ class JointPropagationObserver:
 
     def slotDeletedObject(self, obj):
         self._last_placement.pop(obj.Name, None)
+
+    def resync(self):
+        """Re-seed placement baselines from every open document. Called when the
+        Pipe Harness workbench is (re)activated: while it was inactive this
+        observer wasn't registered, so any Placement changes made in the
+        meantime went untracked. Re-seeding to current positions means the next
+        move computes a correct delta instead of one measured against a stale
+        baseline.
+        """
+        self._last_placement.clear()
+        self._recomputing = False
+        self._active = False
+        for doc in App.listDocuments().values():
+            for obj in doc.Objects:
+                classification = _classify(obj)
+                if classification is not None and hasattr(obj, "Placement"):
+                    self._last_placement[obj.Name] = App.Placement(obj.Placement.Base, obj.Placement.Rotation)
 
     def slotBeforeRecomputeDocument(self, doc):
         # Placement writes made *during* a recompute - notably Hose.execute()

@@ -18,10 +18,13 @@ view are planned for later phases.
 
 - `PipeHarness/` — the workbench source (this is what gets deployed into
   FreeCAD's `Mod/` folder).
-  - `InitGui.py` — registers the workbench, toolbar, and menu; creates the
-    drag-translate handler + its document observer, and the parts library
-    panel, once; also wires up the right-click "Export to Parts Library"
-    context menu entry.
+  - `package.xml` — the FreeCAD Addon Manager manifest (name, version, date,
+    MIT license, supported FreeCAD version, workbench class, icon).
+  - `InitGui.py` — registers the workbench, toolbar, menu, and parts library
+    panel (once, in `Initialize()`); registers/unregisters the 3D-view handler
+    and the joint-propagation/document observers only while the workbench is
+    active (`Activated()`/`Deactivated()`), so nothing runs globally when
+    another workbench is in use; also wires up the right-click context menu.
   - `pipeharness/` — the Python package:
     - `objects.py` — `ConnectionPoint`, `Joint`, `Hose`, `PipeStraight`,
       `PipeBend`, and the routing/fillet math.

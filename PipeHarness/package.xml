@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<package format="1" xmlns="https://wiki.freecad.org/Package_Metadata">
+  <name>Pipe Harness</name>
+  <description>Build pipe/hose harness assemblies: import STEP components, mark connection points on them (or on native FreeCAD bodies), snap components together by matching up ports, and route flexible hose/pipe runs as chains of straight and bend segments. Includes component grounding, joint propagation, a grab-move-drop mover, and a local parts library.</description>
+  <version>0.1.0</version>
+  <date>2026-07-17</date>
+  <maintainer email="MysticFrog@users.noreply.github.com">MysticFrog</maintainer>
+  <license file="LICENSE">MIT</license>
+  <url type="repository" branch="main">https://github.com/MysticFrog/pipe_harness</url>
+  <url type="readme">https://github.com/MysticFrog/pipe_harness/blob/main/README.md</url>
+  <url type="bugtracker">https://github.com/MysticFrog/pipe_harness/issues</url>
+  <icon>Resources/icons/PipeHarness.svg</icon>
+
+  <content>
+    <workbench>
+      <classname>PipeHarnessWorkbench</classname>
+      <name>Pipe Harness</name>
+      <subdirectory>./</subdirectory>
+      <icon>Resources/icons/PipeHarness.svg</icon>
+      <description>Build pipe/hose harness assemblies in 3D from imported or native components.</description>
+      <tag>workbench</tag>
+      <tag>pipe</tag>
+      <tag>hose</tag>
+      <tag>harness</tag>
+      <tag>assembly</tag>
+      <freecadmin>0.21.0</freecadmin>
+    </workbench>
+  </content>
+</package>
