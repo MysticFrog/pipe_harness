@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 <#
 Copies PipeHarness/ into one or more FreeCAD Mod/ folders for local testing.
 A plain copy (not a symlink) is used deliberately, so it works even when the
