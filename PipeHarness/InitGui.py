@@ -71,6 +71,10 @@ class PipeHarnessWorkbench(Gui.Workbench):
         # We didn't track Placement changes while inactive, so re-seed the
         # propagation baselines from the current documents before enabling it.
         self._joint_observer.resync()
+        # Editor modes aren't persisted, so re-apply the read-only Placement
+        # marking on grounded components after a document is reopened.
+        from pipeharness import objects
+        objects.refresh_grounded_editor_modes()
         self.drag_handler.enable()
 
     def Deactivated(self):

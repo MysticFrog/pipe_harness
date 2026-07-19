@@ -63,17 +63,44 @@ def is_grounded(part):
 def set_grounded(part, value=True):
     """Ground/unground a component, adding the (dynamic, persistent) Grounded
     property the first time. No-op for anything that isn't an App::Part.
+
+    Grounding also makes the component's Placement read-only in the property
+    editor, so a grounded part genuinely can't be translated by hand - it's a
+    fixed reference that other parts snap onto.
     """
     if part is None or part.TypeId != "App::Part":
         return
     if not hasattr(part, "Grounded"):
         part.addProperty(
             "App::PropertyBool", "Grounded", "PipeHarness",
-            "When on, this component is a fixed reference: Connect Points snaps other "
-            "parts onto it without moving it, and it isn't dragged along when a jointed "
-            "neighbour moves."
+            "When on, this component is a fixed reference: it can't be translated, "
+            "Connect Points snaps other parts onto it without moving it, and it isn't "
+            "dragged along when a jointed neighbour moves."
         )
     part.Grounded = bool(value)
+    _apply_grounded_editor_mode(part)
+
+
+def _apply_grounded_editor_mode(part):
+    """Placement read-only (editor mode 1) while grounded, editable (0) when not.
+    Editor modes aren't persisted in the saved document, so this is re-applied by
+    refresh_grounded_editor_modes() when the workbench is activated.
+    """
+    try:
+        part.setEditorMode("Placement", 1 if is_grounded(part) else 0)
+    except Exception:
+        pass
+
+
+def refresh_grounded_editor_modes():
+    """Re-apply the read-only Placement marking to every grounded component in
+    every open document. Called when the workbench is activated, because editor
+    modes don't survive saving/reopening a document.
+    """
+    for doc in App.listDocuments().values():
+        for obj in doc.Objects:
+            if obj.TypeId == "App::Part" and hasattr(obj, "Grounded"):
+                _apply_grounded_editor_mode(obj)
 
 
 def ensure_component(doc, obj, ground_if_wrapped=True):

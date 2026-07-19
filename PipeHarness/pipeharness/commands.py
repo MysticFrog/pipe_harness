@@ -5,6 +5,7 @@ Each Command class follows FreeCAD's standard pattern (GetResources / Activated 
 IsActive), matching Mod/Draft/draftguitools/gui_labels.py, and registers itself
 with Gui.addCommand() at import time.
 """
+import contextlib
 import os
 
 import FreeCAD as App
@@ -27,6 +28,22 @@ QT_TRANSLATE_NOOP = QtCore.QT_TRANSLATE_NOOP  # mark UI strings for translation 
 
 def _icon(name):
     return os.path.join(_ICON_DIR, name)
+
+
+@contextlib.contextmanager
+def _transaction(doc, name):
+    """Run a document-mutating command inside one undoable transaction, so a
+    single Ctrl+Z reverts the whole command. FreeCAD does not wrap Python
+    command execution in a transaction automatically, so without this the
+    command's changes aren't on the undo stack at all.
+    """
+    doc.openTransaction(name)
+    try:
+        yield
+    except Exception:
+        doc.abortTransaction()
+        raise
+    doc.commitTransaction()
 
 
 def _same_placement(a, b):
@@ -121,18 +138,19 @@ class ImportSTEPCommand:
         if not filename:
             return
 
-        before = set(o.Name for o in doc.Objects)
-        Import.insert(filename, doc.Name)
-        doc.recompute()
-        new_objs = [o for o in doc.Objects if o.Name not in before]
-        top_level = [o for o in new_objs if not any(p in new_objs for p in o.InList)]
+        with _transaction(doc, "Import STEP as component"):
+            before = set(o.Name for o in doc.Objects)
+            Import.insert(filename, doc.Name)
+            doc.recompute()
+            new_objs = [o for o in doc.Objects if o.Name not in before]
+            top_level = [o for o in new_objs if not any(p in new_objs for p in o.InList)]
 
-        part = doc.addObject("App::Part", "Component")
-        part.Label = os.path.splitext(os.path.basename(filename))[0]
-        for o in top_level:
-            part.addObject(o)
+            part = doc.addObject("App::Part", "Component")
+            part.Label = os.path.splitext(os.path.basename(filename))[0]
+            for o in top_level:
+                part.addObject(o)
 
-        doc.recompute()
+            doc.recompute()
         Gui.SendMsgToActiveView("ViewFit")
 
     def IsActive(self):
@@ -162,6 +180,10 @@ class AddConnectionPointCommand:
         shape_obj = selobj.Object
         doc = shape_obj.Document
 
+        with _transaction(doc, "Add connection point"):
+            self._add_point(doc, selobj, shape_obj)
+
+    def _add_point(self, doc, selobj, shape_obj):
         component = objects.get_parent_part(shape_obj)
         if component is None:
             if shape_obj.TypeId == "App::Part":
@@ -247,17 +269,26 @@ class ConnectPointsCommand:
         )
 
         doc = fixed_point.Document
-        # Suppress joint propagation for the whole snap: moving the free part onto
-        # the fixed point must not cascade back through any *existing* joint and
+        # One transaction for the whole operation so a single Ctrl+Z undoes both
+        # the component's move and the Joint that was created (FreeCAD does not
+        # wrap Python command execution in a transaction for us).
+        # Propagation is suppressed for the snap: moving the free part onto the
+        # fixed point must not cascade back through any *existing* joint and
         # shove the assembly being snapped onto.
+        doc.openTransaction("Connect points")
         try:
             with joint_propagation.suppress():
                 moved = snapping.connect(fixed_point, free_point)
                 objects.create_joint(doc, fixed_point, free_point)
                 doc.recompute()
         except snapping.SnapError as exc:
+            doc.abortTransaction()
             App.Console.PrintError(str(exc) + "\n")
             return
+        except Exception:
+            doc.abortTransaction()
+            raise
+        doc.commitTransaction()
 
         App.Console.PrintMessage(
             "Pipe Harness Connect Points: moved component '%s', Placement after=%s\n"
@@ -295,8 +326,9 @@ class BreakJointCommand:
             return
 
         doc = joints[0].Document
-        doc.removeObject(joints[0].Name)
-        doc.recompute()
+        with _transaction(doc, "Break joint"):
+            doc.removeObject(joints[0].Name)
+            doc.recompute()
 
     def IsActive(self):
         return App.ActiveDocument is not None
@@ -369,8 +401,9 @@ class AddHoseCommand:
 
         start_point = selection[0] if selection else None
         doc = App.ActiveDocument or App.newDocument()
-        objects.create_hose(doc, start_point)
-        doc.recompute()
+        with _transaction(doc, "Add hose"):
+            objects.create_hose(doc, start_point)
+            doc.recompute()
 
     def IsActive(self):
         return True
@@ -510,13 +543,14 @@ class ToggleGroundedCommand:
                 "Select one or more components (App::Part) to toggle grounding.\n"
             )
             return
-        for part in parts:
-            objects.set_grounded(part, not objects.is_grounded(part))
-            App.Console.PrintMessage(
-                "Pipe Harness: '%s' grounded = %s\n" % (part.Label, objects.is_grounded(part))
-            )
-        if App.ActiveDocument:
-            App.ActiveDocument.recompute()
+        doc = parts[0].Document
+        with _transaction(doc, "Toggle grounded"):
+            for part in parts:
+                objects.set_grounded(part, not objects.is_grounded(part))
+                App.Console.PrintMessage(
+                    "Pipe Harness: '%s' grounded = %s\n" % (part.Label, objects.is_grounded(part))
+                )
+            doc.recompute()
 
     def IsActive(self):
         return App.ActiveDocument is not None

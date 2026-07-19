@@ -154,6 +154,77 @@ def main():
         "after the suppress scope, propagation should work normally again"
     )
 
+    # --- a grounded component cannot be translated ---------------------------
+    from pipeharness import drag_translate
+
+    gmove = make_component(doc, "GroundedMove", (300, 0, 0), grounded=True)
+    fmove = make_component(doc, "FreeMove", (400, 0, 0))
+    doc.recompute()
+    assert drag_translate._resolve_movable(gmove) is None, (
+        "the grab-move mover must refuse a grounded component"
+    )
+    assert drag_translate._resolve_movable(gmove.Group[0]) is None, (
+        "...including when the grounded component is reached via its inner shape"
+    )
+    assert drag_translate._resolve_movable(fmove) is fmove, (
+        "a non-grounded component is still movable"
+    )
+    # Grounding also makes Placement read-only in the property editor, so it
+    # can't be translated by hand either; releasing it restores editability.
+    assert "ReadOnly" in gmove.getEditorMode("Placement"), (
+        "a grounded component's Placement should be read-only"
+    )
+    objects.set_grounded(gmove, False)
+    assert "ReadOnly" not in gmove.getEditorMode("Placement"), (
+        "ungrounding should make Placement editable again"
+    )
+    objects.set_grounded(gmove, True)
+    # refresh_grounded_editor_modes re-applies it (editor modes aren't saved).
+    gmove.setEditorMode("Placement", 0)
+    objects.refresh_grounded_editor_modes()
+    assert "ReadOnly" in gmove.getEditorMode("Placement"), (
+        "refresh_grounded_editor_modes should re-apply read-only after a reload"
+    )
+
+    # --- Connect Points is a single undoable step (move + joint) -------------
+    doc4 = App.newDocument("ConnectUndoTest")
+    doc4.UndoMode = 1
+    fixed = make_component(doc4, "Fixed", (0, 0, 0))
+    mover = make_component(doc4, "Mover", (100, 0, 0))
+    doc4.recompute()
+    fp = objects.create_connection_point(doc4, fixed, App.Vector(10, 5, 5), App.Vector(1, 0, 0), name="FP")
+    mp = objects.create_connection_point(doc4, mover, App.Vector(100, 5, 5), App.Vector(-1, 0, 0), name="MP")
+    doc4.recompute()
+
+    def joint_count():
+        return len([o for o in doc4.Objects if isinstance(getattr(o, "Proxy", None), objects.Joint)])
+
+    mover_before = App.Vector(mover.Placement.Base)
+    joints_before = joint_count()
+
+    # Exactly what ConnectPointsCommand does, including the transaction.
+    doc4.openTransaction("Connect points")
+    with joint_propagation.suppress():
+        snapping.connect(fp, mp)
+        objects.create_joint(doc4, fp, mp)
+        doc4.recompute()
+    doc4.commitTransaction()
+
+    assert (App.Vector(mover.Placement.Base) - mover_before).Length > 1e-6, (
+        "connect should have moved the free component"
+    )
+    assert joint_count() == joints_before + 1, "connect should have created a Joint"
+
+    doc4.undo()
+    doc4.recompute()
+    assert (App.Vector(mover.Placement.Base) - mover_before).Length < 1e-6, (
+        "a single undo must revert the Connect Points translation: got %s"
+        % App.Vector(mover.Placement.Base)
+    )
+    assert joint_count() == joints_before, (
+        "the same undo must also remove the Joint that Connect Points created"
+    )
+
     print("ALL CHECKS PASSED")
 
 

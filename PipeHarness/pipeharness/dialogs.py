@@ -31,12 +31,57 @@ def _spin(value, minimum, maximum, suffix):
     return box
 
 
-class StraightSegmentDialog(QtGui.QDialog):
-    def __init__(self, hose, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle(_tr("Add Straight Segment"))
+class _SegmentDialog(QtGui.QDialog):
+    """Shared undo handling for the segment dialogs.
+
+    The tentative segment is created inside a document transaction opened when
+    the dialog opens, so pressing OK leaves exactly one undoable step ("add a
+    segment") and Cancel rolls the whole tentative edit back. FreeCAD does not
+    wrap Python command execution in a transaction for us, so without this the
+    added segment wouldn't be on the undo stack at all.
+    """
+
+    def _begin(self, hose, title):
+        self.setWindowTitle(title)
         self.hose = hose
         self.doc = hose.Document
+        self.segment = None
+        self._settled = False
+        self.doc.openTransaction(title)
+
+    def accept(self):
+        self._settle(commit=True)
+        super().accept()
+
+    def reject(self):
+        self._settle(commit=False)
+        super().reject()
+
+    def _settle(self, commit):
+        if self._settled:
+            return
+        self._settled = True
+        if commit:
+            self.doc.commitTransaction()
+        else:
+            self.doc.abortTransaction()
+            # If undo happens to be disabled the abort is a no-op, so make sure
+            # the tentative segment is gone either way.
+            try:
+                stale = self.segment is not None and self.segment.Name in [
+                    o.Name for o in self.doc.Objects
+                ]
+            except Exception:
+                stale = False
+            if stale:
+                _remove_preview_segment(self.hose, self.segment)
+        self.doc.recompute()
+
+
+class StraightSegmentDialog(_SegmentDialog):
+    def __init__(self, hose, parent=None):
+        super().__init__(parent)
+        self._begin(hose, _tr("Add Straight Segment"))
 
         self.length = _spin(objects._DEFAULT_SEGMENT_LENGTH, 0.01, 100000.0, " mm")
         self.segment = objects.add_straight_to_hose(self.hose, self.length.value())
@@ -60,17 +105,11 @@ class StraightSegmentDialog(QtGui.QDialog):
         self.segment.Length = self.length.value()
         self.doc.recompute()
 
-    def reject(self):
-        _remove_preview_segment(self.hose, self.segment)
-        super().reject()
 
-
-class BendSegmentDialog(QtGui.QDialog):
+class BendSegmentDialog(_SegmentDialog):
     def __init__(self, hose, parent=None):
         super().__init__(parent)
-        self.setWindowTitle(_tr("Add Bend Segment"))
-        self.hose = hose
-        self.doc = hose.Document
+        self._begin(hose, _tr("Add Bend Segment"))
 
         self.radius = _spin(objects._DEFAULT_BEND_RADIUS, 0.0, 100000.0, " mm")
         self.swept_angle = _spin(90.0, 0.0, 180.0, " deg")
@@ -106,10 +145,6 @@ class BendSegmentDialog(QtGui.QDialog):
         self.segment.SweptAngle = self.swept_angle.value()
         self.segment.Yaw = self.yaw.value()
         self.doc.recompute()
-
-    def reject(self):
-        _remove_preview_segment(self.hose, self.segment)
-        super().reject()
 
 
 def _remove_preview_segment(hose, segment):

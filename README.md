@@ -110,9 +110,13 @@ view are planned for later phases.
 - `tests/test_grounding.py` — headless check of component grounding and native-
   body wrapping: `ensure_component()` wraps a plain root body in a component in
   place (grounded by default), `snapping.connect()` refuses to move a grounded
-  component, joint propagation never drags a grounded neighbour (but a grounded
-  part moved directly still drags its non-grounded neighbours), and
-  `joint_propagation.suppress()` stops propagation for its scope.
+  component, the grab-move mover refuses to pick one up and its `Placement` is
+  read-only (re-applied by `refresh_grounded_editor_modes()` after a reload),
+  joint propagation never drags a grounded neighbour (but a grounded part moved
+  directly still drags its non-grounded neighbours),
+  `joint_propagation.suppress()` stops propagation for its scope, and a Connect
+  Points operation is a single undoable step that reverts both the translation
+  and the created `Joint`.
 - `tests/make_sample_steps.py` — generates two placeholder STEP files (a box
   and a cylinder standing in for real fittings) into `samples/`, for manually
   exercising the workbench in the FreeCAD GUI.
@@ -216,9 +220,12 @@ Do this by hand, launching `FreeCAD.exe` from your install (tested on FreeCAD
     should jump to mate with the box, and a `Joint` ball-and-link marker
     appears at the mated point. The Report View prints which point was treated
     as fixed/free and the moved component's Placement before/after.
-    **Grounding**: a *grounded* component is a fixed reference — Connect Points
-    snaps other parts onto it without moving it (even if you selected it
-    second), and it isn't dragged along when a jointed neighbour moves. Bodies
+    **Grounding**: a *grounded* component is a fixed reference that **cannot be
+    translated at all** — the grab-move mover refuses to pick it up, its
+    `Placement` is read-only in the property editor, Connect Points snaps other
+    parts onto it without moving it (even if you selected its point *second* —
+    the roles are swapped automatically so click order can't move the wrong
+    part), and it isn't dragged along when a jointed neighbour moves. Bodies
     you add connection points to via step 6's native-body path are grounded
     automatically; toggle grounding on any component by right-clicking it and
     choosing **Toggle Grounded** (Pipe Harness section). This is what lets you
@@ -328,8 +335,11 @@ Do this by hand, launching `FreeCAD.exe` from your install (tested on FreeCAD
     assembly, not just that one piece.
 22. Immediately press **Ctrl+Z** (Undo). The whole assembly — the part you
     moved *and* every jointed part/connection point that followed it — should
-    snap back to where it was in one step. (Same for undoing a grab-move-drop:
-    the entire move is one undo step.)
+    snap back to where it was in one step. Every document-changing command is
+    wrapped in its own transaction, so one Ctrl+Z cleanly reverts it: a
+    grab-move-drop, a **Connect Points** (undoing *both* the snap translation
+    and the `Joint` it created), Add Hose, Add Straight/Bend Segment, Add
+    Connection Point, Break Joint, Import STEP, and Toggle Grounded.
 23. Look at the two anchor markers on a `Hose` (`Hose_Start` and `Hose_End`):
     the little cone/arrow on each should point *away* from the hose body —
     `Hose_End` out the open end, `Hose_Start` out the near end (opposite the

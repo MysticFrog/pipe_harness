@@ -297,8 +297,11 @@ class DragTranslateHandler:
             if target is None:
                 App.Console.PrintMessage(
                     "Pipe Harness move: that Shift+middle-click didn't resolve to anything "
-                    "movable. Aim directly at the part/pipe, or left-click it once to "
-                    "select it first and then Shift+middle-click to move the selection.\n"
+                    "movable. If you clicked a *grounded* component, that's deliberate - "
+                    "grounded parts are fixed references and can't be translated (use the "
+                    "right-click 'Toggle Grounded' to release it). Otherwise aim directly "
+                    "at the part/pipe, or left-click it once to select it first and then "
+                    "Shift+middle-click to move the selection.\n"
                 )
                 return
             self._start_grab(target, event)
@@ -377,10 +380,11 @@ def _resolve_movable(obj):
     if obj is None:
         return None
     if obj.TypeId == "App::Part":
-        return obj
+        return None if objects.is_grounded(obj) else obj
     parent = objects.get_parent_part(obj)
     if parent is not None:
-        return parent
+        # A grounded component is a fixed reference - never movable by the mover.
+        return None if objects.is_grounded(parent) else parent
     proxy = getattr(obj, "Proxy", None)
     if isinstance(proxy, objects.Hose):
         return obj
